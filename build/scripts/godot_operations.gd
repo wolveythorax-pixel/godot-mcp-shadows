@@ -82,6 +82,8 @@ func _init():
             create_npc_scene(params)
         "create_test_level":
             create_test_level(params)
+        "create_mechanics_test_map":
+            create_mechanics_test_map(params)
         _:
             log_error("Unknown operation: " + operation)
             quit(1)
@@ -1719,4 +1721,314 @@ func create_test_level(params):
             quit(1)
     else:
         printerr("Failed to pack test level: " + str(result))
+        quit(1)
+
+# Create comprehensive mechanics test map with stealth, climbing, and bow areas
+func create_mechanics_test_map(params):
+    print("Creating comprehensive mechanics test map...")
+
+    var scene_path = params.scene_path if params.has("scene_path") else "res://scenes/levels/MechanicsTestMap.tscn"
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    var root = Node3D.new()
+    root.name = "MechanicsTestMap"
+
+    # === WORLD GEOMETRY ===
+    var world_geo = Node3D.new()
+    world_geo.name = "WorldGeometry"
+    root.add_child(world_geo)
+    world_geo.set_owner(root)
+
+    # Main ground (100x100)
+    var ground = StaticBody3D.new()
+    ground.name = "Ground"
+    world_geo.add_child(ground)
+    ground.set_owner(root)
+
+    var ground_collision = CollisionShape3D.new()
+    var ground_shape = BoxShape3D.new()
+    ground_shape.size = Vector3(100, 0.2, 100)
+    ground_collision.shape = ground_shape
+    ground_collision.transform.origin = Vector3(0, -0.1, 0)
+    ground.add_child(ground_collision)
+    ground_collision.set_owner(root)
+
+    var ground_mesh_inst = MeshInstance3D.new()
+    var ground_mesh = PlaneMesh.new()
+    ground_mesh.size = Vector2(100, 100)
+    ground_mesh_inst.mesh = ground_mesh
+    ground.add_child(ground_mesh_inst)
+    ground_mesh_inst.set_owner(root)
+
+    # === STEALTH TEST ZONE (Fenced area with guard) ===
+    var stealth_zone = Node3D.new()
+    stealth_zone.name = "StealthZone"
+    stealth_zone.transform.origin = Vector3(-30, 0, 0)
+    root.add_child(stealth_zone)
+    stealth_zone.set_owner(root)
+
+    # Fence walls (4 walls forming enclosure)
+    var fence_positions = [
+        Vector3(0, 1, -10),   # North wall
+        Vector3(0, 1, 10),    # South wall
+        Vector3(-10, 1, 0),   # West wall
+        Vector3(10, 1, 0)     # East wall
+    ]
+    var fence_sizes = [
+        Vector3(20, 2, 0.2),  # North/South
+        Vector3(20, 2, 0.2),  # North/South
+        Vector3(0.2, 2, 20),  # West/East
+        Vector3(0.2, 2, 20)   # West/East
+    ]
+
+    for i in range(4):
+        var fence = StaticBody3D.new()
+        fence.name = "Fence" + str(i + 1)
+        fence.transform.origin = fence_positions[i]
+        stealth_zone.add_child(fence)
+        fence.set_owner(root)
+
+        var fence_collision = CollisionShape3D.new()
+        var fence_shape = BoxShape3D.new()
+        fence_shape.size = fence_sizes[i]
+        fence_collision.shape = fence_shape
+        fence.add_child(fence_collision)
+        fence_collision.set_owner(root)
+
+        var fence_mesh_inst = MeshInstance3D.new()
+        var fence_mesh = BoxMesh.new()
+        fence_mesh.size = fence_sizes[i]
+        fence_mesh_inst.mesh = fence_mesh
+        fence.add_child(fence_mesh_inst)
+        fence_mesh_inst.set_owner(root)
+
+    # Guard spawn marker inside fence
+    var guard_spawn = Marker3D.new()
+    guard_spawn.name = "GuardSpawn"
+    guard_spawn.transform.origin = Vector3(0, 0.5, 0)
+    stealth_zone.add_child(guard_spawn)
+    guard_spawn.set_owner(root)
+
+    # Cover objects (crates for hiding)
+    for i in range(3):
+        var crate = StaticBody3D.new()
+        crate.name = "Crate" + str(i + 1)
+        crate.transform.origin = Vector3(-5 + i * 5, 0.5, -5)
+        stealth_zone.add_child(crate)
+        crate.set_owner(root)
+
+        var crate_collision = CollisionShape3D.new()
+        var crate_shape = BoxShape3D.new()
+        crate_shape.size = Vector3(2, 1, 2)
+        crate_collision.shape = crate_shape
+        crate.add_child(crate_collision)
+        crate_collision.set_owner(root)
+
+        var crate_mesh_inst = MeshInstance3D.new()
+        var crate_mesh = BoxMesh.new()
+        crate_mesh.size = Vector3(2, 1, 2)
+        crate_mesh_inst.mesh = crate_mesh
+        crate.add_child(crate_mesh_inst)
+        crate_mesh_inst.set_owner(root)
+
+    # === CLIMBING TEST AREA ===
+    var climbing_zone = Node3D.new()
+    climbing_zone.name = "ClimbingZone"
+    climbing_zone.transform.origin = Vector3(30, 0, 0)
+    root.add_child(climbing_zone)
+    climbing_zone.set_owner(root)
+
+    # Cliff wall
+    var cliff = StaticBody3D.new()
+    cliff.name = "CliffWall"
+    cliff.transform.origin = Vector3(0, 5, 0)
+    climbing_zone.add_child(cliff)
+    cliff.set_owner(root)
+
+    var cliff_collision = CollisionShape3D.new()
+    var cliff_shape = BoxShape3D.new()
+    cliff_shape.size = Vector3(15, 10, 1)
+    cliff_collision.shape = cliff_shape
+    cliff.add_child(cliff_collision)
+    cliff_collision.set_owner(root)
+
+    var cliff_mesh_inst = MeshInstance3D.new()
+    var cliff_mesh = BoxMesh.new()
+    cliff_mesh.size = Vector3(15, 10, 1)
+    cliff_mesh_inst.mesh = cliff_mesh
+    cliff.add_child(cliff_mesh_inst)
+    cliff_mesh_inst.set_owner(root)
+
+    # Ladder (series of platforms)
+    for i in range(5):
+        var ladder_rung = StaticBody3D.new()
+        ladder_rung.name = "LadderRung" + str(i + 1)
+        ladder_rung.transform.origin = Vector3(-8, 2 + i * 1.5, 0.6)
+        climbing_zone.add_child(ladder_rung)
+        ladder_rung.set_owner(root)
+
+        var rung_collision = CollisionShape3D.new()
+        var rung_shape = BoxShape3D.new()
+        rung_shape.size = Vector3(1, 0.2, 0.2)
+        rung_collision.shape = rung_shape
+        rung_collision.transform.origin = Vector3(0, 0, 0)
+        ladder_rung.add_child(rung_collision)
+        rung_collision.set_owner(root)
+
+        var rung_mesh_inst = MeshInstance3D.new()
+        var rung_mesh = BoxMesh.new()
+        rung_mesh.size = Vector3(1, 0.2, 0.2)
+        rung_mesh_inst.mesh = rung_mesh
+        ladder_rung.add_child(rung_mesh_inst)
+        rung_mesh_inst.set_owner(root)
+
+    # Rope climb point (marker with visual pole)
+    var rope_pole = StaticBody3D.new()
+    rope_pole.name = "RopePole"
+    rope_pole.transform.origin = Vector3(0, 5, 2)
+    climbing_zone.add_child(rope_pole)
+    rope_pole.set_owner(root)
+
+    var pole_collision = CollisionShape3D.new()
+    var pole_shape = CapsuleShape3D.new()
+    pole_shape.radius = 0.2
+    pole_shape.height = 10
+    pole_collision.shape = pole_shape
+    rope_pole.add_child(pole_collision)
+    pole_collision.set_owner(root)
+
+    var pole_mesh_inst = MeshInstance3D.new()
+    var pole_mesh = CapsuleMesh.new()
+    pole_mesh.radius = 0.2
+    pole_mesh.height = 10
+    pole_mesh_inst.mesh = pole_mesh
+    rope_pole.add_child(pole_mesh_inst)
+    pole_mesh_inst.set_owner(root)
+
+    # Upper platform
+    var upper_platform = StaticBody3D.new()
+    upper_platform.name = "UpperPlatform"
+    upper_platform.transform.origin = Vector3(0, 10, 0)
+    climbing_zone.add_child(upper_platform)
+    upper_platform.set_owner(root)
+
+    var platform_collision = CollisionShape3D.new()
+    var platform_shape = BoxShape3D.new()
+    platform_shape.size = Vector3(10, 0.5, 10)
+    platform_collision.shape = platform_shape
+    platform_collision.transform.origin = Vector3(0, 0, 0)
+    upper_platform.add_child(platform_collision)
+    platform_collision.set_owner(root)
+
+    var platform_mesh_inst = MeshInstance3D.new()
+    var platform_mesh = BoxMesh.new()
+    platform_mesh.size = Vector3(10, 0.5, 10)
+    platform_mesh_inst.mesh = platform_mesh
+    upper_platform.add_child(platform_mesh_inst)
+    platform_mesh_inst.set_owner(root)
+
+    # === BOW SHOOTING RANGE ===
+    var shooting_zone = Node3D.new()
+    shooting_zone.name = "ShootingRange"
+    shooting_zone.transform.origin = Vector3(0, 0, 30)
+    root.add_child(shooting_zone)
+    shooting_zone.set_owner(root)
+
+    # Target stands at varying distances
+    var target_distances = [10, 20, 30]
+    for i in range(3):
+        var target = StaticBody3D.new()
+        target.name = "Target" + str(i + 1)
+        target.transform.origin = Vector3(0, 2, target_distances[i])
+        shooting_zone.add_child(target)
+        target.set_owner(root)
+
+        # Target board
+        var target_collision = CollisionShape3D.new()
+        var target_shape = BoxShape3D.new()
+        target_shape.size = Vector3(2, 2, 0.2)
+        target_collision.shape = target_shape
+        target.add_child(target_collision)
+        target_collision.set_owner(root)
+
+        var target_mesh_inst = MeshInstance3D.new()
+        var target_mesh = BoxMesh.new()
+        target_mesh.size = Vector3(2, 2, 0.2)
+        target_mesh_inst.mesh = target_mesh
+        target.add_child(target_mesh_inst)
+        target_mesh_inst.set_owner(root)
+
+        # Target stand/pole
+        var stand = StaticBody3D.new()
+        stand.name = "TargetStand" + str(i + 1)
+        stand.transform.origin = Vector3(0, 1, 0)
+        target.add_child(stand)
+        stand.set_owner(root)
+
+        var stand_collision = CollisionShape3D.new()
+        var stand_shape = BoxShape3D.new()
+        stand_shape.size = Vector3(0.2, 2, 0.2)
+        stand_collision.shape = stand_shape
+        stand.add_child(stand_collision)
+        stand_collision.set_owner(root)
+
+        var stand_mesh_inst = MeshInstance3D.new()
+        var stand_mesh = BoxMesh.new()
+        stand_mesh.size = Vector3(0.2, 2, 0.2)
+        stand_mesh_inst.mesh = stand_mesh
+        stand.add_child(stand_mesh_inst)
+        stand_mesh_inst.set_owner(root)
+
+    # === LIGHTING ===
+    var lighting = Node3D.new()
+    lighting.name = "Lighting"
+    root.add_child(lighting)
+    lighting.set_owner(root)
+
+    # Sun light
+    var sun = DirectionalLight3D.new()
+    sun.name = "Sun"
+    sun.transform.basis = Basis(Vector3(0.8660254, 0.35355338, -0.35355338), Vector3(0, 0.70710677, 0.70710677), Vector3(0.5, -0.6123724, 0.6123724))
+    sun.light_energy = 1.0
+    lighting.add_child(sun)
+    sun.set_owner(root)
+
+    # Ambient light over map
+    var ambient = OmniLight3D.new()
+    ambient.name = "AmbientLight"
+    ambient.transform.origin = Vector3(0, 20, 0)
+    ambient.light_energy = 0.3
+    ambient.omni_range = 100
+    lighting.add_child(ambient)
+    ambient.set_owner(root)
+
+    # === SPAWN POINTS ===
+    var spawns = Node3D.new()
+    spawns.name = "SpawnPoints"
+    root.add_child(spawns)
+    spawns.set_owner(root)
+
+    # Player spawn (near center)
+    var player_spawn = Marker3D.new()
+    player_spawn.name = "PlayerSpawn"
+    player_spawn.transform.origin = Vector3(0, 1, -40)
+    spawns.add_child(player_spawn)
+    player_spawn.set_owner(root)
+
+    # Save the scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+    if result == OK:
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("Mechanics test map created successfully at: " + scene_path)
+            print("  - Stealth Zone: Fenced area with guard spawn at (-30, 0, 0)")
+            print("  - Climbing Zone: Cliff, ladder, rope at (30, 0, 0)")
+            print("  - Shooting Range: 3 targets at distances 10m, 20m, 30m at (0, 0, 30)")
+        else:
+            printerr("Failed to save mechanics test map: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack mechanics test map: " + str(result))
         quit(1)
