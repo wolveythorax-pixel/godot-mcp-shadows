@@ -1337,19 +1337,386 @@ func create_main_scene(params):
         printerr("Failed to pack Main scene: " + str(result))
         quit(1)
 
-# Stub implementations for other custom operations (to be implemented)
-func create_hud_scene(params):
-    printerr("create_hud_scene not yet implemented")
-    quit(1)
-
+# Create Player.tscn with CharacterBody3D, camera, and controller
 func create_player_scene(params):
-    printerr("create_player_scene not yet implemented")
-    quit(1)
+    print("Creating Player scene...")
 
+    var scene_path = params.scene_path if params.has("scene_path") else "res://scenes/player/Player.tscn"
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    var root = CharacterBody3D.new()
+    root.name = "Player"
+
+    # Collision shape
+    var collision = CollisionShape3D.new()
+    collision.name = "CollisionShape3D"
+    var capsule_shape = CapsuleShape3D.new()
+    capsule_shape.radius = 0.4
+    capsule_shape.height = 1.8
+    collision.shape = capsule_shape
+    root.add_child(collision)
+    collision.set_owner(root)
+
+    # Visual mesh (placeholder)
+    var mesh_instance = MeshInstance3D.new()
+    mesh_instance.name = "MeshInstance3D"
+    var capsule_mesh = CapsuleMesh.new()
+    capsule_mesh.radius = 0.4
+    capsule_mesh.height = 1.8
+    mesh_instance.mesh = capsule_mesh
+    root.add_child(mesh_instance)
+    mesh_instance.set_owner(root)
+
+    # Camera rig
+    var camera_rig = Node3D.new()
+    camera_rig.name = "CameraRig"
+    camera_rig.position = Vector3(0, 1.6, 0)
+    root.add_child(camera_rig)
+    camera_rig.set_owner(root)
+
+    var camera_arm = SpringArm3D.new()
+    camera_arm.name = "CameraArm"
+    camera_arm.spring_length = 5.0
+    camera_rig.add_child(camera_arm)
+    camera_arm.set_owner(root)
+
+    var camera = Camera3D.new()
+    camera.name = "Camera3D"
+    camera.current = true
+    camera_arm.add_child(camera)
+    camera.set_owner(root)
+
+    var camera_manager = Node.new()
+    camera_manager.name = "CameraManager"
+    camera_rig.add_child(camera_manager)
+    camera_manager.set_owner(root)
+
+    # States container
+    var states = Node.new()
+    states.name = "States"
+    root.add_child(states)
+    states.set_owner(root)
+
+    # Abilities container
+    var abilities = Node.new()
+    abilities.name = "Abilities"
+    root.add_child(abilities)
+    abilities.set_owner(root)
+
+    # Save scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+
+    if result == OK:
+        var scene_dir = scene_path.get_base_dir()
+        if scene_dir != "res://":
+            var dir = DirAccess.open("res://")
+            if dir:
+                dir.make_dir_recursive(scene_dir.substr(6))
+
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("Player scene created successfully at: " + scene_path)
+        else:
+            printerr("Failed to save Player scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack Player scene: " + str(result))
+        quit(1)
+
+# Create NPC.tscn with AI, navigation, and perception
 func create_npc_scene(params):
-    printerr("create_npc_scene not yet implemented")
-    quit(1)
+    print("Creating NPC scene...")
 
+    var scene_path = params.scene_path if params.has("scene_path") else "res://scenes/npc/NPC.tscn"
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    var root = CharacterBody3D.new()
+    root.name = "NPC"
+
+    # Collision shape
+    var collision = CollisionShape3D.new()
+    collision.name = "CollisionShape3D"
+    var capsule_shape = CapsuleShape3D.new()
+    capsule_shape.radius = 0.4
+    capsule_shape.height = 1.8
+    collision.shape = capsule_shape
+    root.add_child(collision)
+    collision.set_owner(root)
+
+    # Visual mesh with different color
+    var mesh_instance = MeshInstance3D.new()
+    mesh_instance.name = "MeshInstance3D"
+    var capsule_mesh = CapsuleMesh.new()
+    capsule_mesh.radius = 0.4
+    capsule_mesh.height = 1.8
+    mesh_instance.mesh = capsule_mesh
+    root.add_child(mesh_instance)
+    mesh_instance.set_owner(root)
+
+    # Perception container
+    var perception = Node.new()
+    perception.name = "Perception"
+    root.add_child(perception)
+    perception.set_owner(root)
+
+    # Vision sensor
+    var vision_sensor = Node.new()
+    vision_sensor.name = "VisionSensor"
+    perception.add_child(vision_sensor)
+    vision_sensor.set_owner(root)
+
+    # Vision cone
+    var vision_cone = Area3D.new()
+    vision_cone.name = "VisionCone"
+    vision_sensor.add_child(vision_cone)
+    vision_cone.set_owner(root)
+
+    # Hearing sensor
+    var hearing_sensor = Node.new()
+    hearing_sensor.name = "HearingSensor"
+    perception.add_child(hearing_sensor)
+    hearing_sensor.set_owner(root)
+
+    # Suspicion accumulator
+    var suspicion = Node.new()
+    suspicion.name = "SuspicionAccumulator"
+    perception.add_child(suspicion)
+    suspicion.set_owner(root)
+
+    # Debug container
+    var debug_node = Node.new()
+    debug_node.name = "Debug"
+    root.add_child(debug_node)
+    debug_node.set_owner(root)
+
+    # Save scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+
+    if result == OK:
+        var scene_dir = scene_path.get_base_dir()
+        if scene_dir != "res://":
+            var dir = DirAccess.open("res://")
+            if dir:
+                dir.make_dir_recursive(scene_dir.substr(6))
+
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("NPC scene created successfully at: " + scene_path)
+        else:
+            printerr("Failed to save NPC scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack NPC scene: " + str(result))
+        quit(1)
+
+# Create HUD/UI scene with complete interface hierarchy
+func create_hud_scene(params):
+    print("Creating HUD scene...")
+
+    var scene_path = params.scene_path if params.has("scene_path") else "res://scenes/ui/UI.tscn"
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    var root = CanvasLayer.new()
+    root.name = "UI"
+
+    # HUD container
+    var hud = Control.new()
+    hud.name = "HUD"
+    hud.set_anchors_preset(Control.PRESET_FULL_RECT)
+    root.add_child(hud)
+    hud.set_owner(root)
+
+    # Margin container
+    var margin = MarginContainer.new()
+    margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 20)
+    margin.add_theme_constant_override("margin_top", 20)
+    margin.add_theme_constant_override("margin_right", 20)
+    margin.add_theme_constant_override("margin_bottom", 20)
+    hud.add_child(margin)
+    margin.set_owner(root)
+
+    # VBox container
+    var vbox = VBoxContainer.new()
+    vbox.name = "VBoxContainer"
+    margin.add_child(vbox)
+    vbox.set_owner(root)
+
+    # Top bar
+    var top_bar = HBoxContainer.new()
+    top_bar.name = "TopBar"
+    vbox.add_child(top_bar)
+    top_bar.set_owner(root)
+
+    var harmony_bar = ProgressBar.new()
+    harmony_bar.name = "HarmonyBar"
+    harmony_bar.min_value = -100
+    harmony_bar.max_value = 100
+    harmony_bar.value = 0
+    harmony_bar.custom_minimum_size = Vector2(200, 30)
+    top_bar.add_child(harmony_bar)
+    harmony_bar.set_owner(root)
+
+    var time_display = Label.new()
+    time_display.name = "TimeDisplay"
+    time_display.text = "00:00"
+    top_bar.add_child(time_display)
+    time_display.set_owner(root)
+
+    # Center info
+    var center_info = VBoxContainer.new()
+    center_info.name = "CenterInfo"
+    center_info.alignment = BoxContainer.ALIGNMENT_CENTER
+    center_info.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    vbox.add_child(center_info)
+    center_info.set_owner(root)
+
+    var interaction_prompt = Label.new()
+    interaction_prompt.name = "InteractionPrompt"
+    interaction_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    center_info.add_child(interaction_prompt)
+    interaction_prompt.set_owner(root)
+
+    # Bottom bar
+    var bottom_bar = HBoxContainer.new()
+    bottom_bar.name = "BottomBar"
+    vbox.add_child(bottom_bar)
+    bottom_bar.set_owner(root)
+
+    var debug_info = Label.new()
+    debug_info.name = "DebugInfo"
+    debug_info.text = "Debug"
+    bottom_bar.add_child(debug_info)
+    debug_info.set_owner(root)
+
+    # Save scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+
+    if result == OK:
+        var scene_dir = scene_path.get_base_dir()
+        if scene_dir != "res://":
+            var dir = DirAccess.open("res://")
+            if dir:
+                dir.make_dir_recursive(scene_dir.substr(6))
+
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("HUD scene created successfully at: " + scene_path)
+        else:
+            printerr("Failed to save HUD scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack HUD scene: " + str(result))
+        quit(1)
+
+# Create test level with ground, walls, lighting
 func create_test_level(params):
-    printerr("create_test_level not yet implemented")
-    quit(1)
+    print("Creating test level...")
+
+    var scene_path = params.scene_path if params.has("scene_path") else "res://scenes/levels/TestLevel.tscn"
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    var size_x = 50.0
+    var size_z = 50.0
+    if params.has("size"):
+        if typeof(params.size) == TYPE_ARRAY:
+            if params.size.size() >= 2:
+                size_x = float(params.size[0])
+                size_z = float(params.size[1])
+            elif params.size.size() == 1:
+                size_x = float(params.size[0])
+                size_z = float(params.size[0])
+        else:
+            # Single number - use for both dimensions
+            size_x = float(params.size)
+            size_z = float(params.size)
+
+    var root = Node3D.new()
+    root.name = "TestLevel"
+
+    # World geometry container
+    var world_geo = Node3D.new()
+    world_geo.name = "WorldGeometry"
+    root.add_child(world_geo)
+    world_geo.set_owner(root)
+
+    # Ground
+    var ground = StaticBody3D.new()
+    ground.name = "Ground"
+    world_geo.add_child(ground)
+    ground.set_owner(root)
+
+    var ground_collision = CollisionShape3D.new()
+    var ground_shape = BoxShape3D.new()
+    ground_shape.size = Vector3(size_x, 0.2, size_z)
+    ground_collision.shape = ground_shape
+    ground_collision.position = Vector3(0, -0.1, 0)
+    ground.add_child(ground_collision)
+    ground_collision.set_owner(root)
+
+    var ground_mesh = MeshInstance3D.new()
+    var plane_mesh = PlaneMesh.new()
+    plane_mesh.size = Vector2(size_x, size_z)
+    ground_mesh.mesh = plane_mesh
+    ground.add_child(ground_mesh)
+    ground_mesh.set_owner(root)
+
+    # Lighting
+    var lighting = Node3D.new()
+    lighting.name = "Lighting"
+    root.add_child(lighting)
+    lighting.set_owner(root)
+
+    var ambient_light = OmniLight3D.new()
+    ambient_light.name = "AmbientLight"
+    ambient_light.light_energy = 0.5
+    ambient_light.position = Vector3(0, 10, 0)
+    lighting.add_child(ambient_light)
+    ambient_light.set_owner(root)
+
+    # Spawn points
+    var spawn_points = Node3D.new()
+    spawn_points.name = "SpawnPoints"
+    root.add_child(spawn_points)
+    spawn_points.set_owner(root)
+
+    var player_spawn = Marker3D.new()
+    player_spawn.name = "PlayerSpawn"
+    player_spawn.position = Vector3(0, 1, 0)
+    spawn_points.add_child(player_spawn)
+    player_spawn.set_owner(root)
+
+    # NPCs container
+    var npcs = Node3D.new()
+    npcs.name = "NPCs"
+    root.add_child(npcs)
+    npcs.set_owner(root)
+
+    # Save scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+
+    if result == OK:
+        var scene_dir = scene_path.get_base_dir()
+        if scene_dir != "res://":
+            var dir = DirAccess.open("res://")
+            if dir:
+                dir.make_dir_recursive(scene_dir.substr(6))
+
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("Test level created successfully at: " + scene_path)
+            print("  - Size: " + str(size_x) + "x" + str(size_z))
+        else:
+            printerr("Failed to save test level: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack test level: " + str(result))
+        quit(1)
