@@ -141,6 +141,115 @@
 
 ---
 
+## Custom Operations Testing (Shadows of the Moth)
+
+### Test 8: Create Player Scene ✅
+
+**Command**:
+```bash
+/home/justin/Applications/Godot/Godot_v4.5.1-stable_linux.x86_64 \
+  --headless \
+  --script /home/justin/Desktop/projects_Copy/godot-mcp-shadows/build/scripts/godot_operations.gd \
+  create_player_scene \
+  '{"scene_path":"res://scenes/player/Player.tscn"}'
+```
+
+**Result**: ✅ Success
+**Output**: Player scene created successfully at: res://scenes/player/Player.tscn
+**File Size**: 898 bytes
+**Hierarchy**:
+- Player (CharacterBody3D)
+  - CollisionShape3D (CapsuleShape3D 0.4 radius, 1.8 height)
+  - MeshInstance3D (CapsuleMesh)
+  - CameraRig (Node3D at y=1.6)
+    - CameraArm (SpringArm3D, length=5.0)
+      - Camera3D (current=true)
+    - CameraManager (Node)
+  - States (Node)
+  - Abilities (Node)
+
+### Test 9: Create NPC Scene ✅
+
+**Command**:
+```bash
+/home/justin/Applications/Godot/Godot_v4.5.1-stable_linux.x86_64 \
+  --headless \
+  --script /home/justin/Desktop/projects_Copy/godot-mcp-shadows/build/scripts/godot_operations.gd \
+  create_npc_scene \
+  '{"scene_path":"res://scenes/npc/Guard.tscn"}'
+```
+
+**Result**: ✅ Success
+**Output**: NPC scene created successfully at: res://scenes/npc/Guard.tscn
+**File Size**: 818 bytes
+**Hierarchy**:
+- NPC (CharacterBody3D)
+  - CollisionShape3D (CapsuleShape3D 0.4 radius, 1.8 height)
+  - MeshInstance3D (CapsuleMesh)
+  - Perception (Node)
+    - VisionSensor (Node)
+      - VisionCone (Area3D)
+    - HearingSensor (Node)
+    - SuspicionAccumulator (Node)
+  - Debug (Node)
+
+### Test 10: Create HUD Scene ✅
+
+**Command**:
+```bash
+/home/justin/Applications/Godot/Godot_v4.5.1-stable_linux.x86_64 \
+  --headless \
+  --script /home/justin/Desktop/projects_Copy/godot-mcp-shadows/build/scripts/godot_operations.gd \
+  create_hud_scene \
+  '{"scene_path":"res://scenes/ui/HUD.tscn"}'
+```
+
+**Result**: ✅ Success
+**Output**: HUD scene created successfully at: res://scenes/ui/HUD.tscn
+**File Size**: 1483 bytes
+**Hierarchy**:
+- UI (CanvasLayer)
+  - HUD (Control - anchors full screen)
+    - MarginContainer (20px margins)
+      - VBoxContainer
+        - TopBar (HBoxContainer)
+          - HarmonyBar (ProgressBar 200x30, range -100 to 100)
+          - TimeDisplay (Label "00:00")
+        - CenterInfo (VBoxContainer, centered)
+          - InteractionPrompt (Label, centered)
+        - BottomBar (HBoxContainer)
+          - DebugInfo (Label "Debug")
+
+### Test 11: Create Test Level ✅
+
+**Command**:
+```bash
+/home/justin/Applications/Godot/Godot_v4.5.1-stable_linux.x86_64 \
+  --headless \
+  --script /home/justin/Desktop/projects_Copy/godot-mcp-shadows/build/scripts/godot_operations.gd \
+  create_test_level \
+  '{"scene_path":"res://scenes/levels/TestLevel.tscn","size":50}'
+```
+
+**Result**: ✅ Success
+**Output**: Test level created successfully at: res://scenes/levels/TestLevel.tscn - Size: 50.0x50.0
+**File Size**: 1140 bytes
+**Hierarchy**:
+- TestLevel (Node3D)
+  - WorldGeometry (Node3D)
+    - Ground (StaticBody3D)
+      - CollisionShape3D (BoxShape3D 50x0.2x50 at y=-0.1)
+      - MeshInstance3D (PlaneMesh 50x50)
+  - Lighting (Node3D)
+    - AmbientLight (OmniLight3D at y=10, energy=0.5)
+  - SpawnPoints (Node3D)
+    - PlayerSpawn (Marker3D at y=1)
+  - NPCs (Node3D)
+
+**Notes**: Supports configurable size parameter (single number or [x,z] array)
+
+---
+
 ## Quick Start Commands
 
 ### Create Scene
@@ -243,6 +352,7 @@ Create or update `~/.opencode/mcp-config.json`:
 
 | Operation | Status | Notes |
 |-----------|--------|-------|
+| **Upstream Operations** | | |
 | `create_scene` | ✅ | Creates .tscn files successfully |
 | `add_node` | ✅ | Adds nodes to existing scenes successfully |
 | `load_sprite` | ✅ | Loads textures into Sprite2D/Sprite3D (use empty string for root node) |
@@ -250,7 +360,12 @@ Create or update `~/.opencode/mcp-config.json`:
 | `get_uid` | ✅ | Retrieves UID info, returns JSON with file status |
 | `resave_resources` | ✅ | Re-saves all resources, generates UIDs for scripts |
 | `export_mesh_library` | ✅ | Exports MeshLibrary from 3D scenes with meshes |
-| Custom operations | ⏭️ | To be implemented |
+| **Custom Operations** | | |
+| `create_main_scene` | ✅ | Creates Main.tscn with WorldSystems, AISystems, StealthSystems, UI |
+| `create_player_scene` | ✅ | Creates Player CharacterBody3D with camera rig, collision, states |
+| `create_npc_scene` | ✅ | Creates NPC CharacterBody3D with perception sensors (vision, hearing) |
+| `create_hud_scene` | ✅ | Creates UI CanvasLayer with HarmonyBar, TimeDisplay, DebugInfo |
+| `create_test_level` | ✅ | Creates test level Node3D with ground, lighting, spawn points |
 
 ---
 
