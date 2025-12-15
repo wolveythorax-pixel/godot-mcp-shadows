@@ -366,6 +366,12 @@ Create or update `~/.opencode/mcp-config.json`:
 | `create_npc_scene` | ✅ | Creates NPC CharacterBody3D with perception sensors (vision, hearing) |
 | `create_hud_scene` | ✅ | Creates UI CanvasLayer with HarmonyBar, TimeDisplay, DebugInfo |
 | `create_test_level` | ✅ | Creates test level Node3D with ground, lighting, spawn points |
+| `create_mechanics_test_map` | ✅ | Creates comprehensive test map with stealth, climbing, and bow zones |
+| **Helper Operations** | | |
+| `configure_autoloads` | ✅ | Modifies project.godot with autoloads, input actions, physics layers |
+| `add_patrol_waypoints` | ✅ | Adds Path3D patrol waypoints to NPC scenes |
+| `setup_system_groups` | ✅ | Adds nodes to groups and sets service metadata |
+| `create_from_template` | ✅ | Creates scenes from JSON template files |
 
 ---
 
@@ -403,10 +409,13 @@ Create or update `~/.opencode/mcp-config.json`:
 
 1. ✅ Godot 4.5.1 confirmed working
 2. ✅ Basic scene creation tested
-3. ⏭️ Test all upstream operations
-4. ⏭️ Implement custom operations (create_main_scene, create_hud_scene, etc.)
-5. ⏭️ Configure OpenCode MCP integration
-6. ⏭️ Test full workflow with OpenCode
+3. ✅ All upstream operations tested
+4. ✅ Custom scene operations implemented (create_main_scene, create_hud_scene, etc.)
+5. ✅ Helper operations implemented (configure_autoloads, add_patrol_waypoints, setup_system_groups, create_from_template)
+6. ✅ JSON template system created (templates/)
+7. ✅ Validation and test scripts created (tests/)
+8. ⏭️ Configure OpenCode MCP integration
+9. ⏭️ Test full workflow with OpenCode
 
 ---
 
@@ -463,5 +472,5 @@ ls -lh YOUR_SCENE.tscn
 
 ---
 
-Last updated: December 4, 2024
+Last updated: December 15, 2025
 Tested by: Claude Code (Automated Testing)

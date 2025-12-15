@@ -1,0 +1,128 @@
+{
+  "scene_path": "res://scenes/npc/NPC.tscn",
+  "description": "NPC with AI, perception, and patrol behavior",
+  "root_node": {
+    "type": "CharacterBody3D",
+    "name": "NPC",
+    "groups": ["npc", "enemies"],
+    "children": [
+      {
+        "type": "CollisionShape3D",
+        "name": "CollisionShape3D"
+      },
+      {
+        "type": "MeshInstance3D",
+        "name": "MeshInstance3D"
+      },
+      {
+        "type": "NavigationAgent3D",
+        "name": "NavigationAgent3D",
+        "properties": {
+          "path_desired_distance": 0.5,
+          "target_desired_distance": 0.5
+        }
+      },
+      {
+        "type": "Node",
+        "name": "AIController",
+        "children": [
+          {
+            "type": "Node",
+            "name": "StateMachine",
+            "children": [
+              {
+                "type": "Node",
+                "name": "PatrolState"
+              },
+              {
+                "type": "Node",
+                "name": "InvestigateState"
+              },
+              {
+                "type": "Node",
+                "name": "AlertState"
+              },
+              {
+                "type": "Node",
+                "name": "ChaseState"
+              },
+              {
+                "type": "Node",
+                "name": "SearchState"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "Perception",
+        "children": [
+          {
+            "type": "Node",
+            "name": "VisionSensor",
+            "children": [
+              {
+                "type": "Area3D",
+                "name": "VisionCone",
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "VisionShape"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Node",
+            "name": "HearingSensor",
+            "children": [
+              {
+                "type": "Area3D",
+                "name": "HearingRange",
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "HearingShape"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Node",
+            "name": "SuspicionAccumulator",
+            "exports": {
+              "max_suspicion": 100.0,
+              "decay_rate": 5.0
+            }
+          }
+        ]
+      },
+      {
+        "type": "Path3D",
+        "name": "PatrolPath"
+      },
+      {
+        "type": "Node",
+        "name": "Debug",
+        "children": [
+          {
+            "type": "MeshInstance3D",
+            "name": "VisionDebugMesh"
+          },
+          {
+            "type": "Label3D",
+            "name": "StateLabel",
+            "position": [0, 2.5, 0],
+            "properties": {
+              "text": "PATROL",
+              "billboard": 1
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

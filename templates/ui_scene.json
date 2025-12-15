@@ -1,0 +1,203 @@
+{
+  "scene_path": "res://scenes/ui/UI.tscn",
+  "description": "Complete HUD and menu system for Shadows of the Moth",
+  "root_node": {
+    "type": "CanvasLayer",
+    "name": "UI",
+    "children": [
+      {
+        "type": "Control",
+        "name": "HUD",
+        "properties": {
+          "anchor_right": 1.0,
+          "anchor_bottom": 1.0
+        },
+        "children": [
+          {
+            "type": "MarginContainer",
+            "name": "MarginContainer",
+            "properties": {
+              "anchor_right": 1.0,
+              "anchor_bottom": 1.0
+            },
+            "children": [
+              {
+                "type": "VBoxContainer",
+                "name": "VBoxContainer",
+                "children": [
+                  {
+                    "type": "HBoxContainer",
+                    "name": "TopBar",
+                    "children": [
+                      {
+                        "type": "PanelContainer",
+                        "name": "HarmonyPanel",
+                        "children": [
+                          {
+                            "type": "ProgressBar",
+                            "name": "HarmonyBar",
+                            "properties": {
+                              "min_value": -100,
+                              "max_value": 100,
+                              "value": 0,
+                              "custom_minimum_size": [200, 30]
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "PanelContainer",
+                        "name": "SanityPanel",
+                        "children": [
+                          {
+                            "type": "ProgressBar",
+                            "name": "SanityBar",
+                            "properties": {
+                              "max_value": 100,
+                              "value": 100,
+                              "custom_minimum_size": [150, 25]
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "PanelContainer",
+                        "name": "FocusPanel",
+                        "children": [
+                          {
+                            "type": "ProgressBar",
+                            "name": "FocusBar",
+                            "properties": {
+                              "max_value": 100,
+                              "value": 100,
+                              "custom_minimum_size": [150, 25]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "CenterContainer",
+                    "name": "CenterInfo",
+                    "properties": {
+                      "size_flags_vertical": 3
+                    },
+                    "children": [
+                      {
+                        "type": "VBoxContainer",
+                        "name": "CenterVBox",
+                        "children": [
+                          {
+                            "type": "Label",
+                            "name": "InteractionPrompt",
+                            "properties": {
+                              "horizontal_alignment": 1,
+                              "text": ""
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "HBoxContainer",
+                    "name": "BottomBar",
+                    "children": [
+                      {
+                        "type": "Label",
+                        "name": "TimeDisplay",
+                        "properties": {
+                          "text": "12:00"
+                        }
+                      },
+                      {
+                        "type": "Control",
+                        "name": "Spacer",
+                        "properties": {
+                          "size_flags_horizontal": 3
+                        }
+                      },
+                      {
+                        "type": "Label",
+                        "name": "DebugInfo",
+                        "properties": {
+                          "text": "Debug"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Control",
+        "name": "Menus",
+        "properties": {
+          "anchor_right": 1.0,
+          "anchor_bottom": 1.0,
+          "visible": false
+        },
+        "children": [
+          {
+            "type": "PanelContainer",
+            "name": "PauseMenu",
+            "properties": {
+              "anchor_left": 0.25,
+              "anchor_top": 0.25,
+              "anchor_right": 0.75,
+              "anchor_bottom": 0.75
+            },
+            "children": [
+              {
+                "type": "VBoxContainer",
+                "name": "PauseContent",
+                "children": [
+                  {
+                    "type": "Label",
+                    "name": "PauseTitle",
+                    "properties": {
+                      "text": "PAUSED",
+                      "horizontal_alignment": 1
+                    }
+                  },
+                  {
+                    "type": "Button",
+                    "name": "ResumeButton",
+                    "properties": {
+                      "text": "Resume"
+                    }
+                  },
+                  {
+                    "type": "Button",
+                    "name": "OptionsButton",
+                    "properties": {
+                      "text": "Options"
+                    }
+                  },
+                  {
+                    "type": "Button",
+                    "name": "QuitButton",
+                    "properties": {
+                      "text": "Quit"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "CanvasLayer",
+        "name": "DebugOverlay",
+        "properties": {
+          "layer": 100
+        }
+      }
+    ]
+  }
+}

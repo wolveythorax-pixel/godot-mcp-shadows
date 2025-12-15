@@ -84,6 +84,15 @@ func _init():
             create_test_level(params)
         "create_mechanics_test_map":
             create_mechanics_test_map(params)
+        # Additional custom operations
+        "configure_autoloads":
+            configure_autoloads(params)
+        "add_patrol_waypoints":
+            add_patrol_waypoints(params)
+        "setup_system_groups":
+            setup_system_groups(params)
+        "create_from_template":
+            create_from_template(params)
         _:
             log_error("Unknown operation: " + operation)
             quit(1)
@@ -2032,3 +2041,591 @@ func create_mechanics_test_map(params):
     else:
         printerr("Failed to pack mechanics test map: " + str(result))
         quit(1)
+
+# Configure autoloads in project.godot
+func configure_autoloads(params):
+    print("Configuring autoloads in project.godot...")
+
+    var project_path = params.project_path if params.has("project_path") else "res://"
+    if not project_path.ends_with("/"):
+        project_path += "/"
+
+    var godot_project_file = project_path + "project.godot"
+    if not godot_project_file.begins_with("res://"):
+        godot_project_file = "res://" + godot_project_file.trim_prefix("/")
+
+    var absolute_path = ProjectSettings.globalize_path(godot_project_file)
+
+    if debug_mode:
+        print("Project file path: " + godot_project_file)
+        print("Absolute path: " + absolute_path)
+
+    # Check if project.godot exists
+    if not FileAccess.file_exists(godot_project_file):
+        printerr("project.godot not found at: " + godot_project_file)
+        quit(1)
+
+    # Read existing project.godot
+    var file = FileAccess.open(godot_project_file, FileAccess.READ)
+    if not file:
+        printerr("Failed to open project.godot: " + str(FileAccess.get_open_error()))
+        quit(1)
+
+    var content = file.get_as_text()
+    file.close()
+
+    var modified = false
+
+    # Process autoloads
+    if params.has("autoloads") and params.autoloads is Array:
+        for autoload in params.autoloads:
+            if not autoload.has("name") or not autoload.has("path"):
+                log_error("Autoload entry missing 'name' or 'path': " + str(autoload))
+                continue
+
+            var autoload_name = autoload.name
+            var autoload_path = autoload.path
+            var is_singleton = autoload.singleton if autoload.has("singleton") else true
+
+            # Format: autoload/GameBus="*res://autoloads/GameBus.gd"
+            # The * prefix means it's a singleton (enabled)
+            var autoload_key = "autoload/" + autoload_name
+            var autoload_value = ("*" if is_singleton else "") + autoload_path
+            var autoload_line = autoload_key + "=\"" + autoload_value + "\""
+
+            if debug_mode:
+                print("Processing autoload: " + autoload_name + " -> " + autoload_path)
+
+            # Check if this autoload already exists
+            var existing_pattern = "autoload/" + autoload_name + "="
+            if content.find(existing_pattern) != -1:
+                # Update existing autoload
+                var regex = RegEx.new()
+                regex.compile("autoload/" + autoload_name + "=\"[^\"]*\"")
+                content = regex.sub(content, autoload_line)
+                print("Updated autoload: " + autoload_name)
+                modified = true
+            else:
+                # Add new autoload - find or create [autoload] section
+                if content.find("[autoload]") == -1:
+                    # Add autoload section at the end
+                    content += "\n[autoload]\n\n" + autoload_line + "\n"
+                else:
+                    # Add after [autoload] section header
+                    var autoload_pos = content.find("[autoload]")
+                    var insert_pos = autoload_pos + 10  # Length of "[autoload]"
+                    # Find the end of the line
+                    while insert_pos < content.length() and content[insert_pos] != '\n':
+                        insert_pos += 1
+                    insert_pos += 1  # Move past the newline
+                    content = content.substr(0, insert_pos) + autoload_line + "\n" + content.substr(insert_pos)
+                print("Added autoload: " + autoload_name)
+                modified = true
+
+    # Process input actions
+    if params.has("input_actions") and params.input_actions is Dictionary:
+        for action_name in params.input_actions:
+            var keys = params.input_actions[action_name]
+            if debug_mode:
+                print("Processing input action: " + action_name + " -> " + str(keys))
+
+            # Check if [input] section exists
+            if content.find("[input]") == -1:
+                content += "\n[input]\n\n"
+
+            # Check if action already exists
+            var action_pattern = action_name + "="
+            if content.find(action_pattern) == -1:
+                # Add input action after [input] section
+                var input_pos = content.find("[input]")
+                var insert_pos = input_pos + 7  # Length of "[input]"
+                while insert_pos < content.length() and content[insert_pos] != '\n':
+                    insert_pos += 1
+                insert_pos += 1
+
+                # Build input action entry
+                var events_str = "{\n"
+                events_str += "\"deadzone\": 0.5,\n"
+                events_str += "\"events\": ["
+
+                var first = true
+                for key in keys:
+                    if not first:
+                        events_str += ", "
+                    first = false
+                    # Convert key name to InputEventKey
+                    events_str += "Object(InputEventKey,\"resource_local_to_scene\":false,\"resource_name\":\"\",\"device\":-1,\"window_id\":0,\"alt_pressed\":false,\"shift_pressed\":false,\"ctrl_pressed\":false,\"meta_pressed\":false,\"pressed\":false,\"keycode\":0,\"physical_keycode\":" + str(get_key_code(key)) + ",\"key_label\":0,\"unicode\":0,\"location\":0,\"echo\":false,\"script\":null)"
+                events_str += "]\n}"
+
+                var action_line = action_name + "=" + events_str + "\n"
+                content = content.substr(0, insert_pos) + action_line + content.substr(insert_pos)
+                print("Added input action: " + action_name)
+                modified = true
+
+    # Process physics layers
+    if params.has("physics_layers") and params.physics_layers is Dictionary:
+        for layer_num in params.physics_layers:
+            var layer_name = params.physics_layers[layer_num]
+            var layer_key = "layer_names/3d_physics/layer_" + str(layer_num)
+
+            if debug_mode:
+                print("Processing physics layer: " + layer_num + " -> " + layer_name)
+
+            # Check if layer already defined
+            if content.find(layer_key) == -1:
+                # Find or create layer_names section
+                if content.find("[layer_names]") == -1:
+                    content += "\n[layer_names]\n\n"
+
+                var layer_pos = content.find("[layer_names]")
+                var insert_pos = layer_pos + 13  # Length of "[layer_names]"
+                while insert_pos < content.length() and content[insert_pos] != '\n':
+                    insert_pos += 1
+                insert_pos += 1
+
+                var layer_line = layer_key + "=\"" + layer_name + "\"\n"
+                content = content.substr(0, insert_pos) + layer_line + content.substr(insert_pos)
+                print("Added physics layer: " + layer_num + " = " + layer_name)
+                modified = true
+
+    # Write back if modified
+    if modified:
+        var write_file = FileAccess.open(godot_project_file, FileAccess.WRITE)
+        if not write_file:
+            printerr("Failed to write project.godot: " + str(FileAccess.get_open_error()))
+            quit(1)
+
+        write_file.store_string(content)
+        write_file.close()
+        print("project.godot updated successfully")
+    else:
+        print("No changes needed to project.godot")
+
+# Helper function to get key code from string
+func get_key_code(key_string: String) -> int:
+    # Common key mappings
+    var key_map = {
+        "KEY_ESCAPE": 4194305,
+        "KEY_F1": 4194332,
+        "KEY_F2": 4194333,
+        "KEY_F3": 4194334,
+        "KEY_F4": 4194335,
+        "KEY_F5": 4194336,
+        "KEY_F6": 4194337,
+        "KEY_F7": 4194338,
+        "KEY_F8": 4194339,
+        "KEY_F9": 4194340,
+        "KEY_F10": 4194341,
+        "KEY_F11": 4194342,
+        "KEY_F12": 4194343,
+        "KEY_SPACE": 32,
+        "KEY_ENTER": 4194309,
+        "KEY_TAB": 4194306,
+        "KEY_SHIFT": 4194325,
+        "KEY_CTRL": 4194326,
+        "KEY_ALT": 4194328,
+    }
+
+    if key_map.has(key_string):
+        return key_map[key_string]
+
+    # Try to get ASCII code for single character keys
+    if key_string.length() == 1:
+        return key_string.unicode_at(0)
+
+    # Default
+    return 0
+
+# Add patrol waypoints to an NPC scene
+func add_patrol_waypoints(params):
+    print("Adding patrol waypoints to NPC...")
+
+    if not params.has("scene_path"):
+        printerr("scene_path is required")
+        quit(1)
+
+    var scene_path = params.scene_path
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    if debug_mode:
+        print("Scene path: " + scene_path)
+
+    # Load the scene
+    if not FileAccess.file_exists(scene_path):
+        printerr("Scene file not found: " + scene_path)
+        quit(1)
+
+    var scene = load(scene_path)
+    if not scene:
+        printerr("Failed to load scene: " + scene_path)
+        quit(1)
+
+    var scene_root = scene.instantiate()
+
+    # Get or create PatrolPath node
+    var patrol_path = scene_root.get_node_or_null("PatrolPath")
+    if not patrol_path:
+        patrol_path = Path3D.new()
+        patrol_path.name = "PatrolPath"
+        scene_root.add_child(patrol_path)
+        patrol_path.set_owner(scene_root)
+        if debug_mode:
+            print("Created PatrolPath node")
+
+    # Create the curve if it doesn't exist
+    if not patrol_path.curve:
+        patrol_path.curve = Curve3D.new()
+
+    # Clear existing points if requested
+    if params.has("clear_existing") and params.clear_existing:
+        patrol_path.curve.clear_points()
+        if debug_mode:
+            print("Cleared existing waypoints")
+
+    # Add waypoints
+    if params.has("waypoints") and params.waypoints is Array:
+        var waypoint_count = 0
+        for waypoint in params.waypoints:
+            var position = Vector3.ZERO
+            if waypoint is Array and waypoint.size() >= 3:
+                position = Vector3(float(waypoint[0]), float(waypoint[1]), float(waypoint[2]))
+            elif waypoint is Dictionary:
+                position = Vector3(
+                    float(waypoint.x) if waypoint.has("x") else 0.0,
+                    float(waypoint.y) if waypoint.has("y") else 0.0,
+                    float(waypoint.z) if waypoint.has("z") else 0.0
+                )
+
+            patrol_path.curve.add_point(position)
+            waypoint_count += 1
+            if debug_mode:
+                print("Added waypoint: " + str(position))
+
+        print("Added " + str(waypoint_count) + " patrol waypoints")
+
+    # Also create waypoint markers for visual reference
+    if params.has("create_markers") and params.create_markers:
+        var markers_container = scene_root.get_node_or_null("PatrolMarkers")
+        if not markers_container:
+            markers_container = Node3D.new()
+            markers_container.name = "PatrolMarkers"
+            scene_root.add_child(markers_container)
+            markers_container.set_owner(scene_root)
+
+        # Clear existing markers
+        for child in markers_container.get_children():
+            child.queue_free()
+
+        # Create marker for each point
+        for i in range(patrol_path.curve.point_count):
+            var marker = Marker3D.new()
+            marker.name = "Waypoint" + str(i + 1)
+            marker.position = patrol_path.curve.get_point_position(i)
+            markers_container.add_child(marker)
+            marker.set_owner(scene_root)
+
+    # Set patrol-related metadata if provided
+    if params.has("loop") and patrol_path:
+        patrol_path.set_meta("patrol_loop", params.loop)
+    if params.has("wait_time"):
+        patrol_path.set_meta("patrol_wait_time", params.wait_time)
+    if params.has("speed"):
+        patrol_path.set_meta("patrol_speed", params.speed)
+
+    # Save the scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(scene_root)
+
+    if result == OK:
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("Patrol waypoints added successfully to: " + scene_path)
+        else:
+            printerr("Failed to save scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack scene: " + str(result))
+        quit(1)
+
+# Setup system groups for service discovery
+func setup_system_groups(params):
+    print("Setting up system groups...")
+
+    if not params.has("scene_path"):
+        printerr("scene_path is required")
+        quit(1)
+
+    var scene_path = params.scene_path
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    if debug_mode:
+        print("Scene path: " + scene_path)
+
+    # Load the scene
+    if not FileAccess.file_exists(scene_path):
+        printerr("Scene file not found: " + scene_path)
+        quit(1)
+
+    var scene = load(scene_path)
+    if not scene:
+        printerr("Failed to load scene: " + scene_path)
+        quit(1)
+
+    var scene_root = scene.instantiate()
+
+    # Process group assignments
+    if params.has("groups") and params.groups is Dictionary:
+        var groups_added = 0
+        for node_path in params.groups:
+            var group_names = params.groups[node_path]
+
+            # Find the node
+            var node = scene_root.get_node_or_null(node_path)
+            if not node:
+                log_error("Node not found: " + node_path)
+                continue
+
+            # Add groups
+            if group_names is Array:
+                for group_name in group_names:
+                    node.add_to_group(group_name)
+                    groups_added += 1
+                    if debug_mode:
+                        print("Added " + node.name + " to group: " + group_name)
+            elif group_names is String:
+                node.add_to_group(group_names)
+                groups_added += 1
+                if debug_mode:
+                    print("Added " + node.name + " to group: " + group_names)
+
+        print("Added " + str(groups_added) + " group assignments")
+
+    # Process service tags (metadata for service discovery)
+    if params.has("services") and params.services is Dictionary:
+        var services_tagged = 0
+        for node_path in params.services:
+            var service_info = params.services[node_path]
+
+            var node = scene_root.get_node_or_null(node_path)
+            if not node:
+                log_error("Node not found for service: " + node_path)
+                continue
+
+            # Set service metadata
+            if service_info is Dictionary:
+                for key in service_info:
+                    node.set_meta("svc_" + key, service_info[key])
+                    if debug_mode:
+                        print("Set service meta on " + node.name + ": svc_" + key + " = " + str(service_info[key]))
+            elif service_info is String:
+                node.set_meta("service_type", service_info)
+                if debug_mode:
+                    print("Set service type on " + node.name + ": " + service_info)
+
+            services_tagged += 1
+
+        print("Tagged " + str(services_tagged) + " services")
+
+    # Save the scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(scene_root)
+
+    if result == OK:
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("System groups configured successfully for: " + scene_path)
+        else:
+            printerr("Failed to save scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack scene: " + str(result))
+        quit(1)
+
+# Create a scene from a JSON template
+func create_from_template(params):
+    print("Creating scene from template...")
+
+    if not params.has("template_path"):
+        printerr("template_path is required")
+        quit(1)
+
+    var template_path = params.template_path
+    if not template_path.begins_with("res://"):
+        template_path = "res://" + template_path
+
+    if debug_mode:
+        print("Template path: " + template_path)
+
+    # Load the template JSON
+    if not FileAccess.file_exists(template_path):
+        printerr("Template file not found: " + template_path)
+        quit(1)
+
+    var file = FileAccess.open(template_path, FileAccess.READ)
+    if not file:
+        printerr("Failed to open template: " + str(FileAccess.get_open_error()))
+        quit(1)
+
+    var json_text = file.get_as_text()
+    file.close()
+
+    # Parse JSON
+    var json = JSON.new()
+    var error = json.parse(json_text)
+    if error != OK:
+        printerr("Failed to parse template JSON: " + json.get_error_message())
+        quit(1)
+
+    var template = json.get_data()
+
+    # Get scene path from template or params
+    var scene_path = params.scene_path if params.has("scene_path") else template.scene_path if template.has("scene_path") else null
+    if not scene_path:
+        printerr("No scene_path specified in params or template")
+        quit(1)
+
+    if not scene_path.begins_with("res://"):
+        scene_path = "res://" + scene_path
+
+    if debug_mode:
+        print("Output scene path: " + scene_path)
+
+    # Build the scene from template
+    if not template.has("root_node"):
+        printerr("Template missing 'root_node' definition")
+        quit(1)
+
+    var root = _create_node_from_template(template.root_node, null)
+    if not root:
+        printerr("Failed to create root node from template")
+        quit(1)
+
+    # Apply variable substitutions if provided
+    if params.has("variables") and params.variables is Dictionary:
+        _apply_template_variables(root, params.variables)
+
+    # Save the scene
+    var packed_scene = PackedScene.new()
+    var result = packed_scene.pack(root)
+
+    if result == OK:
+        # Ensure directory exists
+        var scene_dir = scene_path.get_base_dir()
+        if scene_dir != "res://":
+            var dir = DirAccess.open("res://")
+            if dir:
+                dir.make_dir_recursive(scene_dir.substr(6))
+
+        var save_error = ResourceSaver.save(packed_scene, scene_path)
+        if save_error == OK:
+            print("Scene created from template successfully at: " + scene_path)
+        else:
+            printerr("Failed to save scene: " + str(save_error))
+            quit(1)
+    else:
+        printerr("Failed to pack scene: " + str(result))
+        quit(1)
+
+# Helper: Create a node tree from template definition
+func _create_node_from_template(node_def: Dictionary, owner_node) -> Node:
+    if not node_def.has("type"):
+        log_error("Node definition missing 'type'")
+        return null
+
+    var node = instantiate_class(node_def.type)
+    if not node:
+        log_error("Failed to instantiate node type: " + node_def.type)
+        return null
+
+    # Set name
+    if node_def.has("name"):
+        node.name = node_def.name
+
+    # Determine the owner (root node owns itself, others get owner_node)
+    var actual_owner = owner_node if owner_node else node
+
+    # Set properties/exports
+    if node_def.has("properties"):
+        for prop_name in node_def.properties:
+            var prop_value = node_def.properties[prop_name]
+            _set_node_property(node, prop_name, prop_value)
+
+    if node_def.has("exports"):
+        for export_name in node_def.exports:
+            var export_value = node_def.exports[export_name]
+            _set_node_property(node, export_name, export_value)
+
+    # Set transform if provided
+    if node_def.has("position") and node is Node3D:
+        var pos = node_def.position
+        if pos is Array and pos.size() >= 3:
+            node.position = Vector3(pos[0], pos[1], pos[2])
+        elif pos is Dictionary:
+            node.position = Vector3(
+                pos.x if pos.has("x") else 0,
+                pos.y if pos.has("y") else 0,
+                pos.z if pos.has("z") else 0
+            )
+
+    if node_def.has("rotation_degrees") and node is Node3D:
+        var rot = node_def.rotation_degrees
+        if rot is Array and rot.size() >= 3:
+            node.rotation_degrees = Vector3(rot[0], rot[1], rot[2])
+
+    if node_def.has("scale") and node is Node3D:
+        var scl = node_def.scale
+        if scl is Array and scl.size() >= 3:
+            node.scale = Vector3(scl[0], scl[1], scl[2])
+
+    # Set script if provided
+    if node_def.has("script"):
+        var script_path = node_def.script
+        if ResourceLoader.exists(script_path):
+            var script = load(script_path)
+            if script:
+                node.set_script(script)
+
+    # Add to groups
+    if node_def.has("groups"):
+        var groups = node_def.groups
+        if groups is Array:
+            for group_name in groups:
+                node.add_to_group(group_name)
+        elif groups is String:
+            node.add_to_group(groups)
+
+    # Process children
+    if node_def.has("children") and node_def.children is Array:
+        for child_def in node_def.children:
+            var child = _create_node_from_template(child_def, actual_owner)
+            if child:
+                node.add_child(child)
+                child.set_owner(actual_owner)
+
+    return node
+
+# Helper: Set a property on a node with type conversion
+func _set_node_property(node: Node, prop_name: String, value):
+    # Handle special property types
+    if prop_name == "color" and value is Array and value.size() >= 3:
+        var alpha = value[3] if value.size() > 3 else 1.0
+        node.set(prop_name, Color(value[0], value[1], value[2], alpha))
+    elif prop_name.ends_with("_color") and value is Array:
+        var alpha = value[3] if value.size() > 3 else 1.0
+        node.set(prop_name, Color(value[0], value[1], value[2], alpha))
+    elif (prop_name == "position" or prop_name == "size") and value is Array:
+        if value.size() == 2:
+            node.set(prop_name, Vector2(value[0], value[1]))
+        elif value.size() == 3:
+            node.set(prop_name, Vector3(value[0], value[1], value[2]))
+    else:
+        node.set(prop_name, value)
+
+# Helper: Apply variable substitutions to node properties
+func _apply_template_variables(node: Node, variables: Dictionary):
+    # This would need to be expanded for complex use cases
+    # For now, just recurse through children
+    for child in node.get_children():
+        _apply_template_variables(child, variables)

@@ -1,0 +1,95 @@
+{
+  "scene_path": "res://scenes/Main.tscn",
+  "description": "Main game scene with all system managers for Shadows of the Moth",
+  "root_node": {
+    "type": "Node",
+    "name": "Main",
+    "children": [
+      {
+        "type": "Node",
+        "name": "WorldSystems",
+        "children": [
+          {
+            "type": "Node",
+            "name": "TimeManager",
+            "groups": ["svc_time"],
+            "exports": {
+              "seconds_per_day": 21600.0,
+              "current_hour": 12.0
+            }
+          },
+          {
+            "type": "Node",
+            "name": "WeatherManager",
+            "groups": ["svc_weather"]
+          },
+          {
+            "type": "Node3D",
+            "name": "LightManager",
+            "children": [
+              {
+                "type": "DirectionalLight3D",
+                "name": "SunLight",
+                "properties": {
+                  "light_energy": 1.0
+                },
+                "rotation_degrees": [-45, -30, 0]
+              },
+              {
+                "type": "DirectionalLight3D",
+                "name": "MoonLight",
+                "properties": {
+                  "light_energy": 0.3,
+                  "visible": false
+                },
+                "rotation_degrees": [-45, 150, 0]
+              }
+            ]
+          },
+          {
+            "type": "Node",
+            "name": "SkyController"
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "AISystems",
+        "children": [
+          {
+            "type": "Node3D",
+            "name": "NavigationGrid",
+            "groups": ["svc_navigation"]
+          },
+          {
+            "type": "Node",
+            "name": "SquadManager",
+            "groups": ["svc_squad"]
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "StealthSystems",
+        "children": [
+          {
+            "type": "Node",
+            "name": "NoiseEmitter"
+          },
+          {
+            "type": "Node",
+            "name": "PerceptionManager"
+          }
+        ]
+      },
+      {
+        "type": "WorldEnvironment",
+        "name": "WorldEnvironment"
+      },
+      {
+        "type": "CanvasLayer",
+        "name": "UI"
+      }
+    ]
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "scene_path": "res://scenes/levels/TestLevel.tscn",
+  "description": "Basic test level with ground, lighting, and spawn points",
+  "variables": {
+    "level_size": 50,
+    "ambient_energy": 0.5
+  },
+  "root_node": {
+    "type": "Node3D",
+    "name": "TestLevel",
+    "children": [
+      {
+        "type": "Node3D",
+        "name": "WorldGeometry",
+        "children": [
+          {
+            "type": "StaticBody3D",
+            "name": "Ground",
+            "children": [
+              {
+                "type": "CollisionShape3D",
+                "name": "CollisionShape3D",
+                "position": [0, -0.1, 0]
+              },
+              {
+                "type": "MeshInstance3D",
+                "name": "MeshInstance3D"
+              }
+            ]
+          },
+          {
+            "type": "Node3D",
+            "name": "Walls",
+            "children": [
+              {
+                "type": "StaticBody3D",
+                "name": "NorthWall",
+                "position": [0, 2, -25],
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "CollisionShape3D"
+                  },
+                  {
+                    "type": "MeshInstance3D",
+                    "name": "MeshInstance3D"
+                  }
+                ]
+              },
+              {
+                "type": "StaticBody3D",
+                "name": "SouthWall",
+                "position": [0, 2, 25],
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "CollisionShape3D"
+                  },
+                  {
+                    "type": "MeshInstance3D",
+                    "name": "MeshInstance3D"
+                  }
+                ]
+              },
+              {
+                "type": "StaticBody3D",
+                "name": "EastWall",
+                "position": [25, 2, 0],
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "CollisionShape3D"
+                  },
+                  {
+                    "type": "MeshInstance3D",
+                    "name": "MeshInstance3D"
+                  }
+                ]
+              },
+              {
+                "type": "StaticBody3D",
+                "name": "WestWall",
+                "position": [-25, 2, 0],
+                "children": [
+                  {
+                    "type": "CollisionShape3D",
+                    "name": "CollisionShape3D"
+                  },
+                  {
+                    "type": "MeshInstance3D",
+                    "name": "MeshInstance3D"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Node3D",
+        "name": "Lighting",
+        "children": [
+          {
+            "type": "DirectionalLight3D",
+            "name": "Sun",
+            "rotation_degrees": [-45, -30, 0],
+            "properties": {
+              "light_energy": 1.0,
+              "shadow_enabled": true
+            }
+          },
+          {
+            "type": "OmniLight3D",
+            "name": "AmbientLight",
+            "position": [0, 10, 0],
+            "properties": {
+              "light_energy": 0.5,
+              "omni_range": 50
+            }
+          }
+        ]
+      },
+      {
+        "type": "WorldEnvironment",
+        "name": "WorldEnvironment"
+      },
+      {
+        "type": "Node3D",
+        "name": "SpawnPoints",
+        "children": [
+          {
+            "type": "Marker3D",
+            "name": "PlayerSpawn",
+            "position": [0, 1, 0],
+            "groups": ["spawn_player"]
+          },
+          {
+            "type": "Marker3D",
+            "name": "NPCSpawn1",
+            "position": [10, 1, 10],
+            "groups": ["spawn_npc"]
+          },
+          {
+            "type": "Marker3D",
+            "name": "NPCSpawn2",
+            "position": [-10, 1, 10],
+            "groups": ["spawn_npc"]
+          },
+          {
+            "type": "Marker3D",
+            "name": "NPCSpawn3",
+            "position": [0, 1, -10],
+            "groups": ["spawn_npc"]
+          }
+        ]
+      },
+      {
+        "type": "Node3D",
+        "name": "Props",
+        "children": [
+          {
+            "type": "StaticBody3D",
+            "name": "Crate1",
+            "position": [5, 0.5, 5],
+            "children": [
+              {
+                "type": "CollisionShape3D",
+                "name": "CollisionShape3D"
+              },
+              {
+                "type": "MeshInstance3D",
+                "name": "MeshInstance3D"
+              }
+            ]
+          },
+          {
+            "type": "StaticBody3D",
+            "name": "Crate2",
+            "position": [-5, 0.5, -5],
+            "children": [
+              {
+                "type": "CollisionShape3D",
+                "name": "CollisionShape3D"
+              },
+              {
+                "type": "MeshInstance3D",
+                "name": "MeshInstance3D"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Node3D",
+        "name": "NPCs"
+      },
+      {
+        "type": "NavigationRegion3D",
+        "name": "NavigationRegion3D"
+      }
+    ]
+  }
+}

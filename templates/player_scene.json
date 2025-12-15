@@ -1,0 +1,110 @@
+{
+  "scene_path": "res://scenes/player/Player.tscn",
+  "description": "Player character with movement, camera, and ability system",
+  "root_node": {
+    "type": "CharacterBody3D",
+    "name": "Player",
+    "groups": ["player"],
+    "children": [
+      {
+        "type": "CollisionShape3D",
+        "name": "CollisionShape3D"
+      },
+      {
+        "type": "MeshInstance3D",
+        "name": "MeshInstance3D"
+      },
+      {
+        "type": "Node3D",
+        "name": "CameraRig",
+        "position": [0, 1.6, 0],
+        "children": [
+          {
+            "type": "SpringArm3D",
+            "name": "CameraArm",
+            "properties": {
+              "spring_length": 5.0,
+              "collision_mask": 1
+            },
+            "children": [
+              {
+                "type": "Camera3D",
+                "name": "Camera3D",
+                "properties": {
+                  "current": true,
+                  "fov": 75
+                }
+              }
+            ]
+          },
+          {
+            "type": "Node",
+            "name": "CameraManager"
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "States",
+        "children": [
+          {
+            "type": "Node",
+            "name": "IdleState"
+          },
+          {
+            "type": "Node",
+            "name": "WalkState"
+          },
+          {
+            "type": "Node",
+            "name": "RunState"
+          },
+          {
+            "type": "Node",
+            "name": "CrouchState"
+          },
+          {
+            "type": "Node",
+            "name": "ClimbState"
+          }
+        ]
+      },
+      {
+        "type": "Node",
+        "name": "Abilities",
+        "children": [
+          {
+            "type": "Node",
+            "name": "MothVision"
+          },
+          {
+            "type": "Node",
+            "name": "ShadowMeld"
+          },
+          {
+            "type": "Node",
+            "name": "BowAbility"
+          }
+        ]
+      },
+      {
+        "type": "Node3D",
+        "name": "InteractionRay",
+        "children": [
+          {
+            "type": "RayCast3D",
+            "name": "RayCast3D",
+            "properties": {
+              "target_position": [0, 0, -3],
+              "collision_mask": 4
+            }
+          }
+        ]
+      },
+      {
+        "type": "AudioStreamPlayer3D",
+        "name": "FootstepAudio"
+      }
+    ]
+  }
+}
